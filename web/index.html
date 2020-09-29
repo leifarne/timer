@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="timer">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="shortcut icon" type="image/png" href="favicon.png"/>
+
+  <title>timer</title>
+  <link rel="manifest" href="manifest.json">
+
+  
+  </html>
+  <script src="https://www.gstatic.com/firebasejs/7.14.4/firebase-app.js"></script>
+  <!-- include only the Firebase features as you need -->
+  <script src="https://www.gstatic.com/firebasejs/7.14.4/firebase-firestore.js"></script>
+    <!-- initialize the SDK after all desired features are loaded -->
+    <!-- <script defer src="/__/firebase/init.js"></script> -->
+</head>
+<body>
+  <!-- This script installs service_worker.js to provide PWA functionality to
+       application. For more information, see:
+       https://developers.google.com/web/fundamentals/primers/service-workers -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('flutter_service_worker.js');
+      });
+    }
+  </script>
+    <script>
+      // TODO: Replace the following with your app's Firebase project configuration.
+      // See: https://support.google.com/firebase/answer/7015592
+      const firebaseConfig = {
+        apiKey: "AIzaSyDCWkWahYrcnZyyd6HZ5fSKm5nnWebUcPo",
+        authDomain: "rokrust-fs2.firebaseapp.com",
+        databaseURL: "https://rokrust-fs2.firebaseio.com",
+        projectId: "rokrust-fs2",
+        storageBucket: "rokrust-fs2.appspot.com",
+        messagingSenderId: "808434863236",
+        appId: "1:808434863236:web:1b6104fff19af6f601c6d1"
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+    </script>
+  
+  <script src="main.dart.js" type="application/javascript"></script>
+</body>
+</html>
