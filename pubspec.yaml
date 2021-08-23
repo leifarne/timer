@@ -1,5 +1,5 @@
 name: timer
-description: A new Flutter project.
+description: Timeføring.
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `pub publish`. This is preferred for private packages.
@@ -18,18 +18,18 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
+  sdk: ">=2.13.0 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  intl:
+  intl: "^0.17.0"
   string_scanner:
-  firebase_core: "0.5.0"
-  firebase_auth:
-  google_sign_in:
-  cloud_firestore: "^0.14.0+2"
-  flutter_typeahead_web:
+  firebase_core: "^1.4.0"
+  firebase_auth: "^3.0.1"
+  cloud_firestore: "^2.4.0"
+  flutter_typeahead: "^3.2.0"
+  provider:
 
 
 
