@@ -136,7 +136,11 @@ DateTime? parseTime(String? s) {
   try {
     tm = timeFormat.parse(s);
   } catch (FormatException) {
-    tm = DateFormat('HH').parse(s);
+    try {
+      tm = DateFormat('HH').parse(s);
+    } catch (FormatException) {
+      return null;
+    }
   }
   tm = DateTime(now.year, now.month, now.day, tm.hour, tm.minute);
   print('time = $tm');
@@ -161,13 +165,17 @@ bool isTime(String? s) {
 }
 
 Duration? parseDuration(String? s) {
-  if (s == null) return null;
+  if (s == null || s.isEmpty) return null;
 
-  double d = double.parse(s);
-  final h = d.truncate();
-  final m = (d.remainder(1) * 60).round();
-  print('h = $h, m = $m');
-  return Duration(hours: h, minutes: m);
+  try {
+    double d = double.parse(s);
+    final h = d.truncate();
+    final m = (d.remainder(1) * 60).round();
+    print('h = $h, m = $m');
+    return Duration(hours: h, minutes: m);
+  } catch (FormatException) {
+    return null;
+  }
 }
 
 bool isDuration(String? s) {
@@ -189,4 +197,10 @@ int weekNumber(DateTime date) {
 
 String formatTime(DateTime? t) {
   return (t != null) ? timeFormat.format(t) : '';
+}
+
+String? formatDuration(Duration? duration) {
+  if (duration == null) return null;
+  double hours = duration.inMinutes / 60.0;
+  return hours.toStringAsFixed(1);
 }

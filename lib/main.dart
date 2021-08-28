@@ -13,6 +13,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:timer/from_to_widget.dart';
 import 'config.dart' as cfg;
 import 'input_widgets.dart';
 import 'model.dart';
@@ -224,107 +225,100 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
       body: Center(
-        child: OverflowBox(
-          maxWidth: 700,
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Card(
-                  elevation: 4,
-                  child: Form(
-                    key: _formkey,
-                    onChanged: () {},
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: FocusScope(
-                        onKey: _handleKeyPress,
-                        onFocusChange: _onFocusChange,
-                        child: Container(
-                          width: double.infinity,
-                          child: Column(
-                            children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Card(
+                elevation: 4,
+                child: Form(
+                  key: _formkey,
+                  onChanged: () {
+                    print('from changed');
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: FocusScope(
+                      onKey: _handleKeyPress,
+                      onFocusChange: _onFocusChange,
+                      child: Container(
+                        width: double.infinity,
+                        child: Column(
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: _buildDateField(_timeEntry.date),
+                                ),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: _buildTypeAheadField(_timeEntry.accountName, Provider.of<TimeEntryList>(context)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(width: double.infinity, padding: EdgeInsets.only(right: 8), child: buildQuickInputField()),
+                            SizedBox(height: 16),
+                            IntrinsicHeight(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  _buildDateField(_timeEntry.date),
-                                  Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: _buildTypeAheadField(_timeEntry.accountName, Provider.of<TimeEntryList>(context)),
+                                  FromFormField(
+                                    initialValue: TimeDuration(_timeEntry.from, _timeEntry.duration),
+                                    onSaved: (v) {
+                                      _timeEntry.from = v?.from;
+                                      _timeEntry.duration = v?.duration;
+                                    },
+                                  ),
+                                  Spacer(),
+                                  Container(
+                                    padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                    height: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      onPressed: () => showWeeklySummary(context, cfg.history),
+                                      icon: Icon(Icons.assignment_outlined),
+                                      label: Text('Summary'),
                                     ),
                                   ),
                                 ],
                               ),
-                              SizedBox(width: double.infinity, child: buildQuickInputField()),
-                              IntrinsicHeight(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    _buildFromField(),
-                                    _buildDurationField(),
-                                    _buildToField(),
-                                    Spacer(),
-                                    SizedBox(
-                                      width: 200,
-                                      child: Container(
-                                        padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
-                                        height: double.infinity,
-                                        child: ElevatedButton.icon(
-                                          onPressed: () => showWeeklySummary(context, cfg.history),
-                                          icon: Icon(Icons.assignment_outlined),
-                                          label: Text('Summary'),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
                 ),
-                Expanded(
-                  child: () {
-                    List<TimeEntry> model = Provider.of<TimeEntryList>(context).entries;
-                    return Card(
-                      elevation: 4,
-                      child: GestureDetector(
-                        excludeFromSemantics: true,
-                        behavior: HitTestBehavior.opaque,
-                        onSecondaryTap: () => print('tapped'),
-                        child: ListView.separated(
-                          padding: const EdgeInsets.all(0),
-                          itemBuilder: (context, index) => WeekTile(model: model[index]),
-                          itemCount: model.length,
-                          separatorBuilder: (_, __) => const Divider(indent: 10, endIndent: 10, height: 2),
-                        ),
+              ),
+              Expanded(
+                child: () {
+                  List<TimeEntry> model = Provider.of<TimeEntryList>(context).entries;
+                  return Card(
+                    elevation: 4,
+                    child: GestureDetector(
+                      excludeFromSemantics: true,
+                      behavior: HitTestBehavior.opaque,
+                      onSecondaryTap: () => print('tapped'),
+                      child: ListView.separated(
+                        padding: const EdgeInsets.all(0),
+                        itemBuilder: (context, index) => WeekTile(model: model[index]),
+                        itemCount: model.length,
+                        separatorBuilder: (_, __) => const Divider(indent: 10, endIndent: 10, height: 2),
                       ),
-                    );
-                  }(),
-                ),
-              ],
-            ),
+                    ),
+                  );
+                }(),
+              ),
+            ],
           ),
         ),
       ),
-    );
-  }
-
-  // Field builder helper.
-  //
-  Widget _buildToField() {
-    return TextWidget(
-      initialValue: formatTime(_timeEntry.to),
-      iconData: Icons.access_time,
-      labelText: 'To',
-      helperText: '',
-      readOnly: true,
     );
   }
 
@@ -345,72 +339,6 @@ class _MyHomePageState extends State<MyHomePage> {
       labelText: 'Date',
       onSaved: onSaved,
       validator: validator,
-    );
-  }
-
-  // Field builder helper.
-  //
-  Widget _buildFromField() {
-    void onChanged(String v) {
-      if (isTime(v)) {
-        _timeEntry.from = parseTime(v);
-        // setState(() {});
-      }
-    }
-
-    void onSaved(String? v) {
-      // _quickEntryModel.from ??= parseTime(v);
-      _timeEntry.from ??= parseTime(v);
-    }
-
-    String? validator(String? v) => isTime(v) ? null : "Not in HH:mm or HH time format";
-
-    return TextWidget(
-      iconData: Icons.access_time,
-      initialValue: formatTime(_timeEntry.from),
-      hintText: '13:30',
-      helperText: 'hh[:mm]',
-      labelText: 'From',
-      onChanged: onChanged,
-      onSaved: onSaved,
-      validator: validator,
-      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9:]')), LengthLimitingTextInputFormatter(5)],
-    );
-  }
-
-  // Field builder helper.
-  //
-  Widget _buildDurationField() {
-    void onChanged(String v) {
-      if (isDuration(v)) {
-        _timeEntry.duration = parseDuration(v);
-        setState(() {});
-      }
-    }
-
-    void onSaved(String? v) {
-      // _quickEntryModel.duration ??= parseDuration(v);
-      _timeEntry.duration ??= parseDuration(v);
-    }
-
-    String? validator(String? v) => isDuration(v) ? null : "Not an int";
-
-    String? formatDuration(Duration? duration) {
-      if (duration == null) return null;
-      double hours = duration.inMinutes / 60.0;
-      return hours.toStringAsFixed(1);
-    }
-
-    return TextWidget(
-      initialValue: formatDuration(_timeEntry.duration),
-      iconData: Icons.timelapse,
-      hintText: '2',
-      helperText: 'h[.h]',
-      labelText: 'Duration',
-      onChanged: onChanged,
-      onSaved: onSaved,
-      validator: validator,
-      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')), LengthLimitingTextInputFormatter(3)],
     );
   }
 
@@ -438,20 +366,17 @@ class _MyHomePageState extends State<MyHomePage> {
   // Field builder helper.
   //
   Widget buildQuickInputField() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: QuickEntry(
-        iconData: Icons.format_quote,
-        helperText: '[from] [duration] [message]',
-        labelText: 'Quick Input',
-        onChanged: (s) {},
-        onSaved: (s) {
-          final quickEntryModel = parseQuickType(s);
-          _timeEntry.from = quickEntryModel.from;
-          _timeEntry.duration = quickEntryModel.duration;
-          _timeEntry.comment = quickEntryModel.message;
-        },
-      ),
+    return QuickEntry(
+      iconData: Icons.format_quote,
+      helperText: '[from] [duration] [message]',
+      labelText: 'Quick Input',
+      onChanged: (s) {},
+      onSaved: (s) {
+        final quickEntryModel = parseQuickType(s);
+        _timeEntry.from = quickEntryModel.from;
+        _timeEntry.duration = quickEntryModel.duration;
+        _timeEntry.comment = quickEntryModel.message;
+      },
     );
   }
 }

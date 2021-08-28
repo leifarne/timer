@@ -103,9 +103,10 @@ class _TextWidgetState extends State<TextWidget> {
 
     return Container(
       width: widget.width ?? 150,
-      padding: EdgeInsets.all(8),
+      padding: EdgeInsets.all(0),
       child: TextFormField(
-        readOnly: widget.readOnly,
+        // readOnly: widget.readOnly,
+        enabled: !widget.readOnly,
         controller: controller,
         onChanged: widget.onChanged,
         onSaved: widget.onSaved,
