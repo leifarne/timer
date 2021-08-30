@@ -1,11 +1,11 @@
 // TODO: show unauth domain in snack bar as error message - handle exception
-// TODO: Use Provider for sign in
-// TODO: Refactor into compbined Widgets
 
 // ignore: todo
 // TODO: Sign out properly
-// ignore: todo
+
 // TODO: remove global var _userName
+// TODO:
+// TODO: Use Provider for sign in.
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -31,16 +31,13 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => TimeEntryList(cfg.defaultAccountName),
-      child: MaterialApp(
-        title: 'Nordheim Digital v${cfg.version}',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          visualDensity: VisualDensity.adaptivePlatformDensity,
-        ),
-        home: MyHomePage(title: 'Timelister for $_userName'),
+    return MaterialApp(
+      title: 'Nordheim Digital v${cfg.version}',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
+      home: MyHomePage(title: 'Timelister for $_userName'),
     );
   }
 }
@@ -82,17 +79,6 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<User?>? _signInFuture;
   bool _accountsLoaded = false;
 
-  // Helper called when Enter pressed in a focused field.
-  //
-  bool _handleKeyPress(FocusNode node, RawKeyEvent event) {
-    print(event.logicalKey);
-    if (isLoggedIn() && event.character == LogicalKeyboardKey.enter.keyLabel) {
-      _onSaveForm();
-      return true;
-    }
-    return false;
-  }
-
   @override
   void initState() {
     super.initState();
@@ -111,7 +97,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // _quickEntryModel = QuickEntryModel(from: _timeEntry.from, duration: _timeEntry.duration);
 
     // Kick off the sign in process to Google and Firebase with a Future.
-    _signInFuture = signin();
+    // _signInFuture = signin();
   }
 
   @override
@@ -138,27 +124,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  // Save form. Validate and Save all form fields, they are saved in _timeEntry object.
-  // Then save to firestore.
-  //
-  void _onSaveForm() async {
-    if (_formkey.currentState!.validate()) {
-      _formkey.currentState!.save(); // The Model is updated in _timeEntry.
-
-      final model = Provider.of<TimeEntryList>(context, listen: false);
-
-      model.addTimeEntry(_timeEntry.toEntry());
-
-      if (_timeEntry.accountName != model.account) {
-        // If we are changing the account or creating a new one, add new account, and load new list.
-        model.addAccount(_timeEntry.accountName!);
-        model.loadAll(_timeEntry.accountName!);
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Hours added!')));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (ffError) {
@@ -172,154 +137,192 @@ class _MyHomePageState extends State<MyHomePage> {
       return Text('Loading...');
     }
 
-    return Scaffold(
-      key: _scaffoldKey,
-      appBar: AppBar(
-        title: FutureBuilder<User?>(
-            future: _signInFuture,
-            initialData: null,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                if (!_accountsLoaded) {
-                  var model = Provider.of<TimeEntryList>(context, listen: false);
-                  model.loadAccounts();
-                  model.loadAll(cfg.defaultAccountName);
-                  _accountsLoaded = true;
-                }
-                final userName = snapshot.data!.email!;
-                return Text(userName);
-              } else {
-                return Text('<..no user..>');
-              }
-            }),
-        actions: [
-          !isLoggedIn()
-              ? Padding(
+    return FutureProvider<User?>(
+        create: (_) => signin(),
+        lazy: false,
+        catchError: (context, error) {
+          print('Login error $error');
+          return null;
+        },
+        initialData: null,
+        builder: (context, _) {
+          void onSignin() {
+            signin();
+          }
+
+          void onSignOut() async {
+            await firebaseAuth.signOut();
+            setState(() {
+              Provider.of<TimeEntryList>(context, listen: false).clear();
+              _userName = '<...>';
+            });
+          }
+
+          var userModel = context.watch<User?>();
+
+          return Scaffold(
+            key: _scaffoldKey,
+            appBar: AppBar(
+              title: Text(userModel?.email ?? '<..no user..>'),
+              // if (!_accountsLoaded) {
+              //   var model = Provider.of<TimeEntryList>(context, listen: false);
+              //   model.loadAccounts();
+              //   model.loadAll(cfg.defaultAccountName);
+              //   _accountsLoaded = true;
+              // }
+              actions: [
+                Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: ElevatedButton(
-                      onPressed: () {
-                        signin();
-                      },
-                      child: Text('Sign in')),
-                )
-              : Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ElevatedButton(
-                      onPressed: () async {
-                        await firebaseAuth.signOut();
-                        setState(() {
-                          Provider.of<TimeEntryList>(context, listen: false).clear();
-                          _userName = '<...>';
-                        });
-                      },
-                      child: Text('Sign out')),
-                ),
-          SizedBox(
-            width: 8,
-          ),
-          Checkbox(value: kDebugMode, onChanged: null),
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: Center(child: Text('Debug')),
-          ),
-        ],
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Card(
-                elevation: 4,
-                child: Form(
-                  key: _formkey,
-                  onChanged: () {
-                    print('from changed');
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: FocusScope(
-                      onKey: _handleKeyPress,
-                      onFocusChange: _onFocusChange,
-                      child: Container(
-                        width: double.infinity,
-                        child: Column(
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 8.0),
-                                  child: _buildDateField(_timeEntry.date),
-                                ),
-                                SizedBox(width: 8),
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: _buildTypeAheadField(_timeEntry.accountName, Provider.of<TimeEntryList>(context)),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Container(width: double.infinity, padding: EdgeInsets.only(right: 8), child: buildQuickInputField()),
-                            SizedBox(height: 16),
-                            IntrinsicHeight(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  FromFormField(
-                                    initialValue: TimeDuration(_timeEntry.from, _timeEntry.duration),
-                                    onSaved: (v) {
-                                      _timeEntry.from = v?.from;
-                                      _timeEntry.duration = v?.duration;
-                                    },
-                                  ),
-                                  Spacer(),
-                                  Container(
-                                    padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
-                                    height: double.infinity,
-                                    child: ElevatedButton.icon(
-                                      onPressed: () => showWeeklySummary(context, cfg.history),
-                                      icon: Icon(Icons.assignment_outlined),
-                                      label: Text('Summary'),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                    onPressed: isLoggedIn() ? onSignOut : onSignin,
+                    child: Text(isLoggedIn() ? 'Sign outx' : 'Sign in'),
                   ),
                 ),
-              ),
-              Expanded(
-                child: () {
-                  List<TimeEntry> model = Provider.of<TimeEntryList>(context).entries;
-                  return Card(
-                    elevation: 4,
-                    child: GestureDetector(
-                      excludeFromSemantics: true,
-                      behavior: HitTestBehavior.opaque,
-                      onSecondaryTap: () => print('tapped'),
-                      child: ListView.separated(
-                        padding: const EdgeInsets.all(0),
-                        itemBuilder: (context, index) => WeekTile(model: model[index]),
-                        itemCount: model.length,
-                        separatorBuilder: (_, __) => const Divider(indent: 10, endIndent: 10, height: 2),
-                      ),
+                SizedBox(width: 8),
+                Checkbox(value: kDebugMode, onChanged: null),
+                Center(child: Text('Debug')),
+                SizedBox(width: 8),
+              ],
+            ),
+            body: ChangeNotifierProvider<TimeEntryList>(
+              create: (_) {
+                var model = TimeEntryList(cfg.defaultAccountName);
+                model.loadAccounts();
+                model.loadAll(cfg.defaultAccountName);
+                return model;
+              },
+              builder: (context, _) {
+                // Save form. Validate and Save all form fields, they are saved in _timeEntry object.
+                // Then save to firestore.
+                //
+                void onSaveForm() async {
+                  if (_formkey.currentState!.validate()) {
+                    _formkey.currentState!.save(); // The Model is updated in _timeEntry.
+
+                    final model = Provider.of<TimeEntryList>(context, listen: false);
+
+                    model.addTimeEntry(_timeEntry.toEntry());
+
+                    if (_timeEntry.accountName != model.account) {
+                      // If we are changing the account or creating a new one, add new account, and load new list.
+                      model.addAccount(_timeEntry.accountName!);
+                      model.loadAll(_timeEntry.accountName!);
+                    }
+
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Hours added!')));
+                  }
+                }
+
+                // Helper called when Enter pressed in a focused field.
+                //
+                bool handleKeyPress(FocusNode node, RawKeyEvent event) {
+                  print(event.logicalKey);
+                  if (isLoggedIn() && event.character == LogicalKeyboardKey.enter.keyLabel) {
+                    onSaveForm();
+                    return true;
+                  }
+                  return false;
+                }
+
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Card(
+                          elevation: 4,
+                          child: Form(
+                            key: _formkey,
+                            onChanged: () {
+                              print('from changed');
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: FocusScope(
+                                onKey: handleKeyPress,
+                                onFocusChange: _onFocusChange,
+                                child: Container(
+                                  width: double.infinity,
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.only(top: 8.0),
+                                            child: _buildDateField(_timeEntry.date),
+                                          ),
+                                          SizedBox(width: 8),
+                                          Expanded(
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: _buildTypeAheadField(_timeEntry.accountName, Provider.of<TimeEntryList>(context)),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Container(width: double.infinity, padding: EdgeInsets.only(right: 8), child: buildQuickInputField()),
+                                      SizedBox(height: 16),
+                                      IntrinsicHeight(
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          children: [
+                                            FromFormField(
+                                              initialValue: TimeDuration(_timeEntry.from, _timeEntry.duration),
+                                              onSaved: (v) {
+                                                _timeEntry.from = v?.from;
+                                                _timeEntry.duration = v?.duration;
+                                              },
+                                            ),
+                                            Spacer(),
+                                            Container(
+                                              padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                              height: double.infinity,
+                                              child: ElevatedButton.icon(
+                                                onPressed: () => showWeeklySummary(context, cfg.history),
+                                                icon: Icon(Icons.assignment_outlined),
+                                                label: Text('Summary'),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: () {
+                            List<TimeEntry> model = Provider.of<TimeEntryList>(context).entries;
+                            return Card(
+                              elevation: 4,
+                              child: GestureDetector(
+                                excludeFromSemantics: true,
+                                behavior: HitTestBehavior.opaque,
+                                onSecondaryTap: () => print('tapped'),
+                                child: ListView.separated(
+                                  padding: const EdgeInsets.all(0),
+                                  itemBuilder: (context, index) => WeekTile(model: model[index]),
+                                  itemCount: model.length,
+                                  separatorBuilder: (_, __) => const Divider(indent: 10, endIndent: 10, height: 2),
+                                ),
+                              ),
+                            );
+                          }(),
+                        ),
+                      ],
                     ),
-                  );
-                }(),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+                  ),
+                );
+              },
+            ),
+          );
+        });
   }
 
   // Field builder helper.
