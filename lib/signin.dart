@@ -1,64 +1,85 @@
 import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:google_sign_in/google_sign_in.dart';
 
-final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
-// final GoogleSignIn googleSignIn = GoogleSignIn();
+class TimeUser {
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  User? user;
 
-// Is logged in
-bool isLoggedIn() {
-  return firebaseAuth.currentUser != null;
-}
-
-Future<UserCredential> _signInWithGoogle() async {
-  // Create a new provider
-  GoogleAuthProvider googleProvider = GoogleAuthProvider();
-
-  googleProvider.addScope('https://www.googleapis.com/auth/contacts.readonly');
-  googleProvider.setCustomParameters({'login_hint': 'leif.arne.rones@gmail.com'});
-
-  // Once signed in, return the UserCredential
-  return await FirebaseAuth.instance.signInWithPopup(googleProvider);
-
-  // Or use signInWithRedirect
-  // return await FirebaseAuth.instance.signInWithRedirect(googleProvider);
-}
-
-// Future<UserCredential> _signInWithCredential() async {
-//   final GoogleSignInAccount googleSignInAccount = await googleSignIn.signIn();
-//   final GoogleSignInAuthentication googleSignInAuthentication = await googleSignInAccount.authentication;
-
-//   final AuthCredential credential = GoogleAuthProvider.credential(
-//     accessToken: googleSignInAuthentication.accessToken,
-//     idToken: googleSignInAuthentication.idToken,
-//   );
-
-//   final UserCredential userCredential = await firebaseAuth.signInWithCredential(credential);
-
-//   return userCredential;
-// }
-
-Future<User?> signin() async {
-  User? user = firebaseAuth.currentUser;
-
-  print('current = ${user?.email}');
-
-  // Not logged in? then log in.
-  if (user == null) {
-    final UserCredential userCredential = await _signInWithGoogle();
-
-    user = userCredential.user;
+  TimeUser() {
+    // Register auth state listener.
+    _firebaseAuth.authStateChanges().listen((User? user) {
+      if (user == null) {
+        print('User is currently signed out!');
+      } else {
+        print('User is signed in!');
+      }
+      this.user = user;
+    });
   }
 
-  // sorry...
-  if (user == null) {
-    return null;
+  String? get email => user?.email;
+  bool get isLoggedIn => user != null;
+
+  static Future<UserCredential> _signInWithGoogle() async {
+    // Create a new provider
+    GoogleAuthProvider googleProvider = GoogleAuthProvider();
+
+    googleProvider.addScope('https://www.googleapis.com/auth/contacts.readonly');
+    googleProvider.setCustomParameters({'login_hint': 'leif.arne.rones@gmail.com'});
+
+    // Once signed in, return the UserCredential
+    return await FirebaseAuth.instance.signInWithPopup(googleProvider);
   }
 
-  // Successful login.
-  print(user.email!);
+  static Future<TimeUser?> signinFuture() async {
+    var timeUser = TimeUser();
 
-  // ... and inside here: initiate loading of the data, as well
-  // _loadAccountsFuture = _loadAccountList2();
+    var u = timeUser._firebaseAuth.currentUser;
 
-  return user;
+    print('current = ${u?.email}');
+
+    // Not logged in? then log in.
+    if (u == null) {
+      final UserCredential userCredential = await _signInWithGoogle();
+      u = userCredential.user;
+    }
+
+    timeUser.user = u;
+
+    // sorry...
+    if (u == null) {
+      return null;
+    }
+
+    // Successful login.
+    print(u.email);
+
+    return timeUser;
+  }
+
+  Future<bool> signin() async {
+    user = _firebaseAuth.currentUser;
+
+    print('current = ${user?.email}');
+
+    // Not logged in? then log in.
+    if (user == null) {
+      final UserCredential userCredential = await _signInWithGoogle();
+
+      user = userCredential.user;
+    }
+
+    // sorry...
+    if (user == null) {
+      return false;
+    }
+
+    // Successful login.
+    print(user!.email);
+
+    return true;
+  }
+
+  Future<void> signout() async {
+    await _firebaseAuth.signOut();
+  }
 }

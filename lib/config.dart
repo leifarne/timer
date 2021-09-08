@@ -1,4 +1,4 @@
-const version = '1.2';
+const version = '1.3';
 const history = 22;
 const defaultAccountName = 'Haavind';
 const debugCollection = 'timer-d';

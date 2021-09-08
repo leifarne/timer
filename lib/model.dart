@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:timer/service.dart';
 
 import 'parse.dart';
+import 'signin.dart';
 
 class TimeEntry {
   DateTime date;
@@ -33,27 +34,41 @@ class TimeEntry {
 /// Model list
 ///
 class TimeEntryList extends ChangeNotifier {
-  String account;
+  TimeUser? user;
+  String? account;
   List<TimeEntry> entries = [];
   List<String> wbs = [];
   FirestoreRepository? _repository;
 
-  TimeEntryList(this.account) {
-    this._repository = FirestoreRepository('leif.arne.rones@gmail.com');
+  TimeEntryList(this.user) {
+    if (user != null && user!.isLoggedIn) {
+      this._repository = FirestoreRepository(user!.email!);
+    }
   }
 
-  void loadAll(String account) {
+  void setUser(TimeUser user) {
+    this.user = user;
+    this._repository = FirestoreRepository(user.email!);
+  }
+
+  Future<void> loadAll(String account) async {
+    assert(_repository != null);
+
+    if (_repository == null) return;
+
     this.account = account;
 
     entries.clear();
+    try {
+      var entities = await _repository!.loadData(account);
 
-    _repository!.loadData(account).then((entities) {
       entries = entities.map(TimeEntry.fromEntity).toList();
       entries.sort((a, b) => b.date.compareTo(a.date));
+
       notifyListeners();
-    }).catchError((err) {
+    } catch (err) {
       notifyListeners();
-    });
+    }
   }
 
   /// Add new entry, or update the entry for "date" if already present.
@@ -81,13 +96,20 @@ class TimeEntryList extends ChangeNotifier {
     }
   }
 
-  void loadAccounts() {
-    _repository!.loadAccountList().then((list) {
-      wbs = list;
-      notifyListeners();
-    }).catchError((err) {
-      notifyListeners();
-    });
+  void loadAccountsDebug() {
+    wbs = ['Haavind', 'Burqa'];
+    notifyListeners();
+  }
+
+  /// Load accounts
+  ///
+  Future<void> loadAccounts() async {
+    try {
+      wbs = await _repository!.loadAccountList();
+    } on Exception catch (_) {
+      // fall through
+    }
+    notifyListeners();
   }
 
   /// Aggregate into weekly summary for nn number of weeks.
@@ -119,6 +141,12 @@ class TimeEntryList extends ChangeNotifier {
     account = '';
     notifyListeners();
     _repository = null;
+  }
+
+  void clearUser() {
+    user = null;
+    _repository = null;
+    notifyListeners();
   }
 }
 
