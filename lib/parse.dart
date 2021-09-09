@@ -35,6 +35,7 @@ QuickEntryModel parseQuickType(String? s) {
   s = s.trim();
   var scanner = StringScanner(s);
 
+  // ignore: todo
   // TODO: Use precise #occurences, f.ex. {1,2}
   // Determine which fields are present in the string.
   RegExp rxfdm = RegExp(r'(\d+(?::\d+)*)\s(\d+(?:\.\d*)*)\s(.+)');

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'input_widgets.dart';
 import 'parse.dart';
 
 class TimeDuration {
@@ -109,8 +110,8 @@ class _FromFormFieldState extends FormFieldState<TimeDuration> {
     _durationController = TextEditingController(text: formatDuration(value?.duration));
     _toController = TextEditingController(text: formatTime(value?.to));
 
-    // selectAllOnFocusChange(_fromFocusNode, _fromController);
-    // selectAllOnFocusChange(_durationFocusNode, _durationController);
+    selectAllOnFocusChange(_fromFocusNode, _fromController);
+    selectAllOnFocusChange(_durationFocusNode, _durationController);
   }
 
   @override

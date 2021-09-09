@@ -1,3 +1,4 @@
+// ignore: todo
 // TODO: show unauth domain in snack bar as error message - handle exception
 
 import 'package:firebase_core/firebase_core.dart';
@@ -200,96 +201,99 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Card(
-                elevation: 4,
-                child: Form(
-                  key: _formkey,
-                  onChanged: () {
-                    print('from changed');
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: FocusScope(
-                      onKey: handleKeyPress,
-                      onFocusChange: _onFocusChange,
-                      child: Container(
-                        width: double.infinity,
-                        child: Column(
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 8.0),
-                                  child: _buildDateField(_timeEntry.date),
-                                ),
-                                SizedBox(width: 8),
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: _buildTypeAheadField(_timeEntry.accountName, Provider.of<TimeEntryList>(context)),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Container(width: double.infinity, padding: EdgeInsets.only(right: 8), child: buildQuickInputField()),
-                            SizedBox(height: 16),
-                            IntrinsicHeight(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.center,
+        child: OverflowBox(
+          maxWidth: cfg.maxWidth,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Card(
+                  elevation: 4,
+                  child: Form(
+                    key: _formkey,
+                    onChanged: () {
+                      print('from changed');
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: FocusScope(
+                        onKey: handleKeyPress,
+                        onFocusChange: _onFocusChange,
+                        child: Container(
+                          width: double.infinity,
+                          child: Column(
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  FromFormField(
-                                    initialValue: TimeDuration(_timeEntry.from, _timeEntry.duration),
-                                    onSaved: (v) {
-                                      _timeEntry.from = v?.from;
-                                      _timeEntry.duration = v?.duration;
-                                    },
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8.0),
+                                    child: _buildDateField(_timeEntry.date),
                                   ),
-                                  Spacer(),
-                                  Container(
-                                    padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
-                                    height: double.infinity,
-                                    child: ElevatedButton.icon(
-                                      onPressed: () => showWeeklySummary(context, cfg.history),
-                                      icon: Icon(Icons.assignment_outlined),
-                                      label: Text('Summary'),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: _buildTypeAheadField(_timeEntry.accountName, Provider.of<TimeEntryList>(context)),
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                          ],
+                              Container(width: double.infinity, padding: EdgeInsets.only(right: 8), child: buildQuickInputField()),
+                              SizedBox(height: 16),
+                              IntrinsicHeight(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    FromFormField(
+                                      initialValue: TimeDuration(_timeEntry.from, _timeEntry.duration),
+                                      onSaved: (v) {
+                                        _timeEntry.from = v?.from;
+                                        _timeEntry.duration = v?.duration;
+                                      },
+                                    ),
+                                    Spacer(),
+                                    Container(
+                                      padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                      height: double.infinity,
+                                      child: ElevatedButton.icon(
+                                        onPressed: () => showWeeklySummary(context, cfg.history),
+                                        icon: Icon(Icons.assignment_outlined),
+                                        label: Text('Summary'),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: Card(
-                  elevation: 4,
-                  child: GestureDetector(
-                    excludeFromSemantics: true,
-                    behavior: HitTestBehavior.opaque,
-                    onSecondaryTap: () => print('tapped'),
-                    child: Consumer<TimeEntryList>(builder: (context, model, child) {
-                      return ListView.separated(
-                        padding: const EdgeInsets.all(0),
-                        itemBuilder: (context, index) => WeekTile(model: model.entries[index]),
-                        itemCount: model.entries.length,
-                        separatorBuilder: (_, __) => const Divider(indent: 10, endIndent: 10, height: 2),
-                      );
-                    }),
+                Expanded(
+                  child: Card(
+                    elevation: 4,
+                    child: GestureDetector(
+                      excludeFromSemantics: true,
+                      behavior: HitTestBehavior.opaque,
+                      onSecondaryTap: () => print('tapped'),
+                      child: Consumer<TimeEntryList>(builder: (context, model, child) {
+                        return ListView.separated(
+                          padding: const EdgeInsets.all(0),
+                          itemBuilder: (context, index) => WeekTile(model: model.entries[index]),
+                          itemCount: model.entries.length,
+                          separatorBuilder: (_, __) => const Divider(indent: 10, endIndent: 10, height: 2),
+                        );
+                      }),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -313,6 +317,7 @@ class _MyHomePageState extends State<MyHomePage> {
       labelText: 'Date',
       onSaved: onSaved,
       validator: validator,
+      autofocus: true,
     );
   }
 

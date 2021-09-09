@@ -51,6 +51,7 @@ class TextWidget extends StatefulWidget {
     this.inputFormatters,
     this.hintText,
     this.readOnly = false,
+    this.autofocus = false,
   }) : super(key: key);
 
   final double? width;
@@ -64,6 +65,7 @@ class TextWidget extends StatefulWidget {
   final String? Function(String? p1)? validator;
   final List<TextInputFormatter>? inputFormatters;
   final bool readOnly;
+  final bool autofocus;
 
   @override
   _TextWidgetState createState() => _TextWidgetState();
@@ -114,6 +116,7 @@ class _TextWidgetState extends State<TextWidget> {
         decoration: decoration,
         inputFormatters: widget.inputFormatters,
         validator: widget.validator,
+        autofocus: widget.autofocus,
       ),
     );
   }
